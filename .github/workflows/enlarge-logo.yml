@@ -1,0 +1,31 @@
+name: Enlarge header logo
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/enlarge-logo.yml']
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enlarge logo on desktop and mobile
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          s=s.replace('.nav{min-height:88px;', '.nav{min-height:104px;')
+          s=s.replace('.brand-logo img{width:auto;height:58px;max-width:360px;', '.brand-logo img{width:auto;height:76px;max-width:430px;')
+          s=s.replace('@media(max-width:900px){.nav{min-height:74px}.brand-logo img{height:48px;max-width:245px}', '@media(max-width:900px){.nav{min-height:88px}.brand-logo img{height:62px;max-width:290px}')
+          s=s.replace('@media(max-width:560px){.brand-logo img{height:42px;max-width:205px}', '@media(max-width:560px){.brand-logo img{height:58px;max-width:255px}')
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Make Twin Dolphins logo larger' || exit 0
+          git push
