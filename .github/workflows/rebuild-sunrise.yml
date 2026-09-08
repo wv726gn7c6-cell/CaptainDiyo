@@ -1,0 +1,31 @@
+name: Rebuild sunrise video
+
+on:
+  push:
+    paths:
+      - 'video/sunrise-ready.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild web video from Diyo's original footage
+        shell: bash
+        run: |
+          cat video/sunrise-00.b64 video/sunrise-01.b64 video/sunrise-02.b64 video/sunrise-03.b64 > /tmp/sunrise.b64
+          base64 --decode /tmp/sunrise.b64 > video/sunrise.mp4
+          test "$(stat -c%s video/sunrise.mp4)" -gt 30000
+          rm video/sunrise-00.b64 video/sunrise-01.b64 video/sunrise-02.b64 video/sunrise-03.b64 video/sunrise-ready.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Use Diyo original sunrise footage"
+          git push
