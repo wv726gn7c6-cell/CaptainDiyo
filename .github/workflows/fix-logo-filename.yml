@@ -1,0 +1,38 @@
+name: Fix logo filename
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/fix-logo-filename.yml']
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rename logo and update references
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          images=Path('images')
+          candidates=[p for p in images.iterdir() if p.name.strip().lower()=='twin-dolphins-logo.png']
+          if not candidates:
+              raise SystemExit('Logo file not found')
+          src=candidates[0]
+          dst=images/'twin-dolphins-logo.png'
+          if src != dst:
+              src.rename(dst)
+          p=Path('index.html')
+          s=p.read_text()
+          import re
+          s=re.sub(r'images/(?:%20|\s)*twin-dolphins-logo(?:\.png)?\.PNG', 'images/twin-dolphins-logo.png', s, flags=re.I)
+          s=re.sub(r'images/(?:%20|\s)*twin-dolphins-logo\.PNG', 'images/twin-dolphins-logo.png', s, flags=re.I)
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Fix logo filename and references' || exit 0
+          git push
